@@ -9,14 +9,14 @@ from sklearn.neural_network import MLPClassifier
 
 pd.set_option('display.max_columns', None)
 pd.set_option('display.expand_frame_repr', False)
-fname = "all_gold_stats.csv"
+fname = "gold_stats_my_games.csv"
 data = pd.read_csv(fname)
 # print(data.head(10),"\n")
 
 formattedDf = pd.DataFrame()
 formattedDf["Minute"] = data["Minute"]
 formattedDf["Gold Diff vs Team2"] = data["Team1 Gold"] - data["Team2 Gold"]
-formattedDf["Team1 Win"] = (data["Winning Team"] == "Team1").astype(int)  # 1 for win, 0 for loose
+formattedDf["Team1 Win"] = (data["Winning Team"] == "Team 1").astype(int)  # 1 for win, 0 for loose
 print("original data:\n", formattedDf.head(10), "\n")
 
 """
@@ -36,7 +36,8 @@ X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size=0.2, random_
 print("test Data:\n", X_test, "\n")
 
 # Trainieren des Modells
-clf = MLPClassifier(solver='lbfgs', alpha=1e-5, hidden_layer_sizes=(3, 3), random_state=1, max_iter=2000)
+clf = MLPClassifier(solver='lbfgs', alpha=1e-5, hidden_layer_sizes=(3, 3), activation='logistic', random_state=1,
+                    max_iter=2000)
 clf.fit(X_train, y_train)
 
 prediction = clf.predict(X_test)
@@ -47,7 +48,16 @@ print("test values:\n", y_test.values, "\n")
 acc_score = round(accuracy_score(y_test, prediction), 2)
 print('Accuracy:', acc_score)
 
+print("\n\ntest:\n")
 
 
+#for i in range(len(X_test)):
+ #   test2 = clf.predict(X_test.iloc[[i]])
+  #  print(X_test.iloc[i], "  ", test2)
 
+for i in range(22):
+    probabilities = clf.predict_proba(X_test.iloc[[i]])
+    positive_class_probability = probabilities[0, 1]
+    print(X_test.iloc[i].T,"\n",positive_class_probability)
+    print()
 

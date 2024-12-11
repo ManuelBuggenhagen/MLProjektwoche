@@ -116,7 +116,7 @@ def fetch_and_extract_all_gold_stats(api_key, puuid, region="europe", count=20, 
             timeline_data = get_match_timeline(api_key, match_id, region)
 
             gold_stats_df = extract_gold_stats_from_timeline(timeline_data,match_data)
-            gold_stats_df["Match ID"] = match_id
+            #gold_stats_df["Match ID"] = match_id
             all_gold_stats.append(gold_stats_df)
         except Exception as e:
             print(f"Error processing match {match_id}: {e}")
@@ -132,7 +132,7 @@ def fetch_and_extract_all_gold_stats(api_key, puuid, region="europe", count=20, 
 if __name__ == "__main__":
     api_key = "RGAPI-b3a050c5-1b1c-49f9-a414-2cb6c7061aed"
     puuid = "r_nM2wBLPJrz1FNlrVUEyIf7nDWrgqxoS-kQG9oQeWiZdom6SdJ76PbcgGyIsW31A_jou2wrEx3A6w"
-    output_csv_path = "all_gold_stats.csv"
+    output_csv_path = "gold_stats_my_games.csv"
 
     combined_gold_stats_df = fetch_and_extract_all_gold_stats(api_key, puuid, output_csv_path=output_csv_path)
     print(combined_gold_stats_df)
