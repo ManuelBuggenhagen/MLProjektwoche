@@ -180,7 +180,7 @@ def fetch_and_analyze_top_challenger_games(api_key, region="euw1", count=10, mat
 
 # Example usage
 if __name__ == "__main__":
-    api_key = "RGAPI-b3a050c5-1b1c-49f9-a414-2cb6c7061aed"  # Replace with your Riot API key
+    api_key = "RGAPI-d5225358-53ef-4f51-90dc-19d91482817f"  # Replace with your Riot API key
     output_csv_path = "gold_stats_challenger.csv"  # Replace with your desired output CSV path
 
     combined_gold_stats_df = fetch_and_analyze_top_challenger_games(api_key, output_csv_path=output_csv_path)
