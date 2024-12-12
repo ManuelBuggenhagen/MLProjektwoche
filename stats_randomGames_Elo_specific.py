@@ -108,25 +108,37 @@ def extract_stats_for_one_match(timeline_data, match_data):
     team2_inhibitors_kills = 0
     team1_dragon_kills = 0
     team2_dragon_kills = 0
+    team1_nash_kills = 0
+    team2_nash_kills = 0
+    team1_elder_kills = 0
+    team2_elder_kills = 0
 
+    dragon_types = {"WATER_DRAGON", "FIRE_DRAGON", "EARTH_DRAGON", "AIR_DRAGON", "CHEMTECH_DRAGON", "HEXTECH_DRAGON"}
     stats = []
     for frame in frames:
         timestamp = frame["timestamp"] // 60000  # millisecond to min
         player_stats = {"Minute": timestamp}
         team1_gold_total = 0
         team2_gold_total = 0
+        team1_total_level = 0
+        team2_total_level = 0
 
         for participant_id, info in player_mapping.items():
             team = info["team"]
             lane = info["lane"]
             role = info["role"]
             player_key = f"{team}:{lane}:{role}"
-            gold = frame["participantFrames"][str(participant_id)]["totalGold"]
+            participant_frame = frame["participantFrames"][str(participant_id)]
+            gold = participant_frame["totalGold"]
+            level = participant_frame["level"]
             player_stats[player_key] = gold
+
             if team == "Team1":
                 team1_gold_total += gold
+                team1_total_level += level
             else:
                 team2_gold_total += gold
+                team2_total_level += level
 
         if "events" in frame:
             for event in frame["events"]:
@@ -154,11 +166,29 @@ def extract_stats_for_one_match(timeline_data, match_data):
 
                 # Monster Kills
                 if event["type"] == "ELITE_MONSTER_KILL":
-                    if event.get("monsterSubType") == "DRAGON":
+                    print(event.get("monsterType"))
+                    print(event.get("monsterSubType"))
+                    # elemental drake kill
+                    if event.get("monsterSubType") in dragon_types:
                         if event["killerId"] <= 5:
                             team1_dragon_kills += 1
                         else:
                             team2_dragon_kills += 1
+                    # elder drake kills
+                    elif event.get("monsterSubType") == "ELDER_DRAGON":
+                        if event["killerId"] <= 5:
+                            team1_elder_kills += 1
+                        else:
+                            team2_elder_kills += 1
+                    # Baron Nashor kills
+                    if event.get("monsterType") == "BARON_NASHOR":
+                        if event["killerId"] <= 5:
+                            team1_nash_kills += 1
+                        else:
+                            team2_nash_kills += 1
+
+        team1_avg_level = team1_total_level / 5
+        team2_avg_level = team2_total_level / 5
 
         player_stats["Team1:Gold"] = team1_gold_total
         player_stats["Team2:Gold"] = team2_gold_total
@@ -170,6 +200,12 @@ def extract_stats_for_one_match(timeline_data, match_data):
         player_stats["Team2:Inhibitors:Kills"] = team2_inhibitors_kills
         player_stats["Team1:DragonKills"] = team1_dragon_kills
         player_stats["Team2:DragonKills"] = team2_dragon_kills
+        player_stats["Team1:ElderDragonKills"] = team1_elder_kills
+        player_stats["Team2:ElderDragonKills"] = team2_elder_kills
+        player_stats["Team1:BaronKills"] = team1_nash_kills
+        player_stats["Team2:BaronKills"] = team2_nash_kills
+        player_stats["Team1:AverageLevel"] = team1_avg_level
+        player_stats["Team2:AverageLevel"] = team2_avg_level
 
         stats.append(player_stats)
 
@@ -201,7 +237,7 @@ def extract_relevant_stats_all_matches(api_key, match_ids, region="europe"):
 if __name__ == "__main__":
     pd.set_option('display.max_columns', None)
     pd.set_option('display.expand_frame_repr', False)
-    api_key = "RGAPI-d5225358-53ef-4f51-90dc-19d91482817f"
+    api_key = "RGAPI-6eaec9c2-0c17-49dd-8e22-a69cb81225b3"
     try:
         # get players of specific skill level
         bronze_puuids = get_players(api_key, tier="BRONZE", count=10)
@@ -236,10 +272,10 @@ if __name__ == "__main__":
         print(f"last {len(diamond_match_ids)} game IDs of all diamond players:\n", diamond_match_ids, "\n")
 
         # test work in progress
-        timeline_data = get_match_timeline(api_key, "EUW1_7193196627", "EUROPE")
-        match_data = get_match_data(api_key, "EUW1_7193196627", "EUROPE")
+        timeline_data = get_match_timeline(api_key, "EUW1_7176868282", "EUROPE")
+        match_data = get_match_data(api_key, "EUW1_7176868282", "EUROPE")
         dataTest = extract_stats_for_one_match(timeline_data, match_data)
-        dataTest["GameID"] = "EUW1_7193196627"
+        dataTest["GameID"] = "EUW1_7176868282"
         print(dataTest)
 
     except Exception as e:
