@@ -1,9 +1,11 @@
 import requests
 import json
 import pandas as pd
+import time
 
 
 def get_puuid_from_id(api_key, summoner_id, region="euw1"):
+    # time.sleep(1.2)
     url = f"https://{region}.api.riotgames.com/lol/summoner/v4/summoners/{summoner_id}"
     headers = {"X-Riot-Token": api_key}
     response = requests.get(url, headers=headers)
@@ -15,6 +17,7 @@ def get_puuid_from_id(api_key, summoner_id, region="euw1"):
 
 
 def get_players(api_key, tier, region="euw1", division="IV", queue="RANKED_SOLO_5x5", count=10):
+    # time.sleep(1.2)
     url = f"https://{region}.api.riotgames.com/lol/league/v4/entries/{queue}/{tier}/{division}?page=1"
     headers = {"X-Riot-Token": api_key}
     response = requests.get(url, headers=headers)
@@ -43,6 +46,7 @@ def get_players(api_key, tier, region="euw1", division="IV", queue="RANKED_SOLO_
 
 
 def get_match_ids(api_key, puuid, region="europe", count=20):
+    # time.sleep(1.2)
     url = f"https://{region}.api.riotgames.com/lol/match/v5/matches/by-puuid/{puuid}/ids?count={count}"
     headers = {"X-Riot-Token": api_key}
     response = requests.get(url, headers=headers)
@@ -53,6 +57,7 @@ def get_match_ids(api_key, puuid, region="europe", count=20):
 
 
 def get_match_data(api_key, match_id, region="europe"):
+    time.sleep(1.2)
     url = f"https://{region}.api.riotgames.com/lol/match/v5/matches/{match_id}"
     headers = {"X-Riot-Token": api_key}
     response = requests.get(url, headers=headers)
@@ -61,6 +66,7 @@ def get_match_data(api_key, match_id, region="europe"):
 
 
 def get_match_timeline(api_key, match_id, region="europe"):
+    time.sleep(1.2)
     url = f"https://{region}.api.riotgames.com/lol/match/v5/matches/{match_id}/timeline"
     headers = {"X-Riot-Token": api_key}
     response = requests.get(url, headers=headers)
@@ -68,24 +74,6 @@ def get_match_timeline(api_key, match_id, region="europe"):
         return response.json()
     else:
         raise Exception(f"Failed to fetch match timeline: {response.status_code} - {response.text}")
-
-
-def extract_stats_for_one_match2(timeline_data, match_data):
-    teams = match_data["info"]["teams"]
-    winning_team = "Team1" if teams[0]["win"] else "Team2"
-    frames = timeline_data["info"]["frames"]
-
-    stats = []
-    for frame in frames:
-        timestamp = frame["timestamp"] // 60000  # Convert timestamp to minutes
-        team1_gold = sum(frame["participantFrames"][str(i)]["totalGold"] for i in range(1, 6))
-        team2_gold = sum(frame["participantFrames"][str(i)]["totalGold"] for i in range(6, 11))
-        stats.append({"Minute": timestamp, "Team1 Gold": team1_gold, "Team2 Gold": team2_gold})
-
-    df = pd.DataFrame(stats)
-    df["Winner"] = winning_team
-    df = df.set_index('Minute')
-    return df
 
 
 def extract_stats_for_one_match(timeline_data, match_data):
@@ -97,7 +85,9 @@ def extract_stats_for_one_match(timeline_data, match_data):
     player_mapping = {participant["participantId"]: {
         "team": "Team1" if participant["participantId"] <= 5 else "Team2",
         "lane": participant["lane"],
-        "role": participant["role"]
+        "role": participant["role"],
+        "id": participant["participantId"]
+
     } for participant in participants}
 
     team1_kills = 0
@@ -127,7 +117,20 @@ def extract_stats_for_one_match(timeline_data, match_data):
             team = info["team"]
             lane = info["lane"]
             role = info["role"]
-            player_key = f"{team}:{lane}:{role}"
+            match info["id"]:
+                case 1 | 6:
+                    player_key = f"{team}:TopLane"
+                case 2 | 7:
+                    player_key = f"{team}:Jungle"
+                case 3 | 8:
+                    player_key = f"{team}:MidLane"
+                case 4 | 9:
+                    player_key = f"{team}:AD Carry"
+                case 5 | 10:
+                    player_key = f"{team}:Support"
+                case _:
+                    raise ValueError(f"Unexpected participant_id: {participant_id} {type(participant_id)}")
+            # player_key = f"{team}:{lane}:{role}"
             participant_frame = frame["participantFrames"][str(participant_id)]
             gold = participant_frame["totalGold"]
             level = participant_frame["level"]
@@ -152,7 +155,7 @@ def extract_stats_for_one_match(timeline_data, match_data):
 
                 # Structure Kills
                 if event["type"] == "BUILDING_KILL":
-                    print(event.get("buildingType"))
+                    # print(event.get("buildingType"))
                     if event.get("buildingType") == "TOWER_BUILDING":
                         if event["killerId"] <= 5:
                             team1_turrets_kills += 1
@@ -166,8 +169,9 @@ def extract_stats_for_one_match(timeline_data, match_data):
 
                 # Monster Kills
                 if event["type"] == "ELITE_MONSTER_KILL":
-                    print(event.get("monsterType"))
-                    print(event.get("monsterSubType"))
+                    # print(event.get("monsterType"))
+                    # print(event.get("monsterSubType"))
+
                     # elemental drake kill
                     if event.get("monsterSubType") in dragon_types:
                         if event["killerId"] <= 5:
@@ -211,26 +215,31 @@ def extract_stats_for_one_match(timeline_data, match_data):
 
     df = pd.DataFrame(stats)
     df["Winner"] = winning_team
-    df = df.set_index("Minute")
+    # df = df.set_index("Minute")
     return df
 
 
-def extract_relevant_stats_all_matches(api_key, match_ids, region="europe"):
+def extract_relevant_stats_all_matches(api_key, match_ids, elo):
     all_stats = []
-
+    counter = 0
     for match_id in match_ids:
+        counter += 1
+        print(f"got data for {counter}. match: {match_id} in {elo}")
         try:
-            match_data = get_match_data(api_key, match_id, region)
-            timeline_data = get_match_timeline(api_key, match_id, region)
+            timeline_data = get_match_timeline(api_key, match_id)
+            match_data = get_match_data(api_key, match_id)
 
-            gold_stats_df = extract_stats_for_one_match(timeline_data, match_data)
-            gold_stats_df["Match ID"] = match_id
-            all_stats.append(gold_stats_df)
+            data_one_match = extract_stats_for_one_match(timeline_data, match_data)
+            data_one_match["MatchID"] = match_id
+            data_one_match["Elo"] = elo
+            all_stats.append(data_one_match)
+
         except Exception as e:
             print(f"Error processing match {match_id}: {e}")
 
-    combined_gold_stats = pd.concat(all_stats, ignore_index=True)
-    return combined_gold_stats
+    stats_all_matches = pd.concat(all_stats, ignore_index=True)
+    df = pd.DataFrame(stats_all_matches)
+    return df
 
 
 # main execution part
@@ -272,11 +281,18 @@ if __name__ == "__main__":
         print(f"last {len(diamond_match_ids)} game IDs of all diamond players:\n", diamond_match_ids, "\n")
 
         # test work in progress
-        timeline_data = get_match_timeline(api_key, "EUW1_7176868282", "EUROPE")
-        match_data = get_match_data(api_key, "EUW1_7176868282", "EUROPE")
-        dataTest = extract_stats_for_one_match(timeline_data, match_data)
-        dataTest["GameID"] = "EUW1_7176868282"
-        print(dataTest)
+        # timeline_data = get_match_timeline(api_key, "EUW1_7225292242", "EUROPE")
+        # match_data = get_match_data(api_key, "EUW1_7225292242", "EUROPE")
+        # dataTest = extract_stats_for_one_match(timeline_data, match_data)
+        # dataTest["GameID"] = "EUW1_7225292242"
+        # dataTest.to_csv("stats_test.csv")
+        # print(dataTest)
+
+        dataBronze = extract_relevant_stats_all_matches(api_key, bronze_match_ids,"Bronze4")
+        dataPlatinum = extract_relevant_stats_all_matches(api_key, platinum_match_ids, "Platinum4")
+        dataDiamond = extract_relevant_stats_all_matches(api_key, diamond_match_ids, "Diamond4")
+        allData= pd.concat([dataBronze, dataPlatinum, dataDiamond], ignore_index=True)
+        allData.to_csv("stats_300_games.csv")
 
     except Exception as e:
         print("Error:", e)
