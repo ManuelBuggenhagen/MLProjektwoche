@@ -246,7 +246,7 @@ def extract_relevant_stats_all_matches(api_key, match_ids, elo):
 if __name__ == "__main__":
     pd.set_option('display.max_columns', None)
     pd.set_option('display.expand_frame_repr', False)
-    api_key = "RGAPI-6eaec9c2-0c17-49dd-8e22-a69cb81225b3"
+    api_key = "RGAPI-365d9af3-42fc-46f6-9c61-bf9af971da41"
     try:
         # get players of specific skill level
         bronze_puuids = get_players(api_key, tier="BRONZE", count=10)
