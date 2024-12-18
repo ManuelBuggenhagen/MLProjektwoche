@@ -89,5 +89,5 @@ allDiamond = getALlGamesFromOneElo(data, "Diamond4")
 # print(allPlatinum)
 # print(allDiamond)
 
-correlationMatrix(allBronze)
+#correlationMatrix(allBronze)
 #scattermatrix(allBronze)

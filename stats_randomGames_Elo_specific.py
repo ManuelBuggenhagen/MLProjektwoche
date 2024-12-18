@@ -5,7 +5,7 @@ import time
 
 
 def get_puuid_from_id(api_key, summoner_id, region="euw1"):
-    # time.sleep(1.2)
+    time.sleep(1.2)
     url = f"https://{region}.api.riotgames.com/lol/summoner/v4/summoners/{summoner_id}"
     headers = {"X-Riot-Token": api_key}
     response = requests.get(url, headers=headers)
@@ -17,7 +17,7 @@ def get_puuid_from_id(api_key, summoner_id, region="euw1"):
 
 
 def get_players(api_key, tier, region="euw1", division="IV", queue="RANKED_SOLO_5x5", count=10):
-    # time.sleep(1.2)
+    time.sleep(1.2)
     url = f"https://{region}.api.riotgames.com/lol/league/v4/entries/{queue}/{tier}/{division}?page=1"
     headers = {"X-Riot-Token": api_key}
     response = requests.get(url, headers=headers)
@@ -46,7 +46,7 @@ def get_players(api_key, tier, region="euw1", division="IV", queue="RANKED_SOLO_
 
 
 def get_match_ids(api_key, puuid, region="europe", count=20):
-    # time.sleep(1.2)
+    time.sleep(1.2)
     url = f"https://{region}.api.riotgames.com/lol/match/v5/matches/by-puuid/{puuid}/ids?count={count}"
     headers = {"X-Riot-Token": api_key}
     response = requests.get(url, headers=headers)
@@ -198,10 +198,10 @@ def extract_stats_for_one_match(timeline_data, match_data):
         player_stats["Team2:Gold"] = team2_gold_total
         player_stats["Team1:Kills"] = team1_kills
         player_stats["Team2:Kills"] = team2_kills
-        player_stats["Team1:TurretsKills"] = team1_turrets_kills
-        player_stats["Team2:TurretsKills"] = team2_turrets_kills
-        player_stats["Team1:InhibitorsKills"] = team1_inhibitors_kills
-        player_stats["Team2:Inhibitors:Kills"] = team2_inhibitors_kills
+        player_stats["Team1:TurretKills"] = team1_turrets_kills
+        player_stats["Team2:TurretKills"] = team2_turrets_kills
+        player_stats["Team1:InhibitorKills"] = team1_inhibitors_kills
+        player_stats["Team2:InhibitorKills"] = team2_inhibitors_kills
         player_stats["Team1:DragonKills"] = team1_dragon_kills
         player_stats["Team2:DragonKills"] = team2_dragon_kills
         player_stats["Team1:ElderDragonKills"] = team1_elder_kills
@@ -246,16 +246,16 @@ def extract_relevant_stats_all_matches(api_key, match_ids, elo):
 if __name__ == "__main__":
     pd.set_option('display.max_columns', None)
     pd.set_option('display.expand_frame_repr', False)
-    api_key = "RGAPI-365d9af3-42fc-46f6-9c61-bf9af971da41"
+    api_key = "RGAPI-970b4d22-42c7-4234-86ae-2ba063429929"
     try:
         # get players of specific skill level
-        bronze_puuids = get_players(api_key, tier="BRONZE", count=10)
+        bronze_puuids = get_players(api_key, tier="BRONZE", count=100)
         print(f"{len(bronze_puuids)} Bronze (low elo) Players PUUIDs: \n", bronze_puuids, "\n")
 
-        platinum_puuids = get_players(api_key, tier="PLATINUM", count=10)
+        platinum_puuids = get_players(api_key, tier="PLATINUM", count=100)
         print(f"{len(platinum_puuids)} Platin (mid elo) Players PUUIDs:  \n", platinum_puuids, "\n")
 
-        diamond_puuids = get_players(api_key, tier="DIAMOND", count=10)
+        diamond_puuids = get_players(api_key, tier="DIAMOND", count=100)
         print(f"{len(diamond_puuids)} Diamond(high elo) Players PUUIDs: \n ", diamond_puuids, "\n")
 
         # get match ids for a puuid
@@ -288,11 +288,14 @@ if __name__ == "__main__":
         # dataTest.to_csv("stats_test.csv")
         # print(dataTest)
 
-        dataBronze = extract_relevant_stats_all_matches(api_key, bronze_match_ids,"Bronze4")
+        dataBronze = extract_relevant_stats_all_matches(api_key, bronze_match_ids, "Bronze4")
         dataPlatinum = extract_relevant_stats_all_matches(api_key, platinum_match_ids, "Platinum4")
         dataDiamond = extract_relevant_stats_all_matches(api_key, diamond_match_ids, "Diamond4")
-        allData= pd.concat([dataBronze, dataPlatinum, dataDiamond], ignore_index=True)
-        allData.to_csv("stats_300_games.csv")
+        dataBronze.to_csv("stats_1000_games_Bronze.csv")
+        dataBronze.to_csv("stats_1000_games_Platinum.csv")
+        dataBronze.to_csv("stats_1000_games_Diamond.csv")
+        allData = pd.concat([dataBronze, dataPlatinum, dataDiamond], ignore_index=True)
+        allData.to_csv("stats_3000_games.csv")
 
     except Exception as e:
         print("Error:", e)
