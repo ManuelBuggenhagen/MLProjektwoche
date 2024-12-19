@@ -11,7 +11,7 @@ from sklearn.neural_network import MLPClassifier
 
 pd.set_option('display.max_columns', None)
 pd.set_option('display.expand_frame_repr', False)
-fname = "stats_300_games.csv"
+fname = "stats_3000_games.csv"
 data = pd.read_csv(fname)
 
 transformedData = pd.DataFrame()
@@ -22,8 +22,8 @@ transformedData['Jungle'] = data['Team1:Jungle'] - data['Team2:Jungle']
 transformedData['ADC'] = data['Team1:AD Carry'] - data['Team2:AD Carry']
 transformedData['Support'] = data['Team1:Support'] - data['Team2:Support']
 transformedData['PlayerKills'] = data['Team1:Kills'] - data['Team2:Kills']
-transformedData['TurretKills'] = data['Team1:TurretsKills'] - data['Team2:TurretsKills']
-transformedData['InhibitorKills'] = data['Team1:InhibitorsKills'] - data['Team2:Inhibitors:Kills']
+transformedData['TurretKills'] = data['Team1:TurretKills'] - data['Team2:TurretKills']
+transformedData['InhibitorKills'] = data['Team1:InhibitorKills'] - data['Team2:InhibitorKills']
 transformedData['DragonKills'] = data['Team1:DragonKills'] - data['Team2:DragonKills']
 transformedData['ElderDragonKills'] = data['Team1:ElderDragonKills'] - data['Team2:ElderDragonKills']
 transformedData['BaronKills'] = data['Team1:BaronKills'] - data['Team2:BaronKills']
@@ -56,7 +56,7 @@ print("Y_test shape:", Y_test.shape)
 clf = MLPClassifier(solver='lbfgs', alpha=1e-5, hidden_layer_sizes=(3, 3), random_state=1, max_iter=2000)
 clf.fit(X_train, Y_train)
 
-prediction = clf.predict_proba(X_test)
+prediction = clf.predict(X_test)
 print(prediction)
 print()
 print(Y_test)
